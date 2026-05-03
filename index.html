@@ -1874,7 +1874,7 @@ function renderDailyQuote() {
 // GOOGLE SHEETS INTEGRATION
 // ══════════════════════════════════════
 // Αντικατέστησε με το Web App URL μετά το deploy του Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeyxcBdvsNB3ZPX1YO6f71qQk1btl1X3BvwQmmomO4AwmNQ51oFMR4MXP30gmmuqb4SA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuJmawtM4wBQsHI6KnmnqKUb3iFkBNAxOSc1fiwj4QoD-8KyCCzoruLnpjU-cAGFA5QA/exec";
 
 
 // ── Telegram config ───────────────────────────────────────────
@@ -1905,19 +1905,17 @@ async function postToTelegram(text) {
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
   try {
-    // Στέλνουμε στο Cloudflare Pages Function /proxy
-    // Ίδιο domain = χωρίς CORS. Το worker προωθεί στο Apps Script.
-    const res = await fetch("/proxy", {
+    const res = await fetch(APPS_SCRIPT_URL, {
       method:  "POST",
-      headers: { "Content-Type": "text/plain" },
+      headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(payload),
-      signal:  AbortSignal.timeout(15000),
+      signal:  AbortSignal.timeout(10000),
     });
-    const json = await res.json();
-    console.log("Sheets response:", json);
-    return json;
+    const text = await res.text();
+    console.log("Sheets OK:", text);
+    return text;
   } catch (err) {
-    console.warn("Sheets post failed:", err);
+    console.warn("Sheets post failed:", err.message);
     return null;
   }
 }
