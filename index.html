@@ -1883,7 +1883,8 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzM1P6O9_qNyNsg
 //    https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 //    και αντέγραψε το "id" από το chat object → CHAT_ID
 const TELEGRAM_BOT_TOKEN = "8703571530:AAHf9T-20H2_RvfBHoQJ0FsJh1ieG0qENNc";
-const TELEGRAM_CHAT_ID   = "-5256327291";
+const TELEGRAM_CHAT_ID      = "8520969707";   // notifications → προσωπικό chat
+const TELEGRAM_DATA_CHAT_ID = "-5256327291";  // KAMINAKIA_DATA:: → group (διαβάζει το Apps Script)
 
 async function postToTelegram(text) {
   if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("PASTE")) return;
@@ -1955,11 +1956,23 @@ async function submitGateCheckin() {
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
 
-  // Στέλνουμε στο Telegram (για notification)
-  // και ξεχωριστά στα Sheets (no-cors POST)
+  // Εδώ στέλνουμε το κωδικοποιημένο μήνυμα για το Sheet
   const finalMessage = "KAMINAKIA_DATA::" + JSON.stringify(payload);
+  // Notification στο προσωπικό chat
   postToTelegram(finalMessage);
-  postToSheets({ type: "checkin", ...payload });
+  // Δεδομένα στο group για Apps Script polling
+  fetch(
+    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_DATA_CHAT_ID,
+        text: finalMessage,
+        disable_notification: true,
+      }),
+    }
+  ).catch(() => {});
 
   // Format WhatsApp message
   const dateStr = now.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric' });
