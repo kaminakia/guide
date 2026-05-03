@@ -1955,9 +1955,11 @@ async function submitGateCheckin() {
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
 
-  // Εδώ στέλνουμε το κωδικοποιημένο μήνυμα για το Sheet
+  // Στέλνουμε στο Telegram (για notification)
+  // και ξεχωριστά στα Sheets (no-cors POST)
   const finalMessage = "KAMINAKIA_DATA::" + JSON.stringify(payload);
   postToTelegram(finalMessage);
+  postToSheets({ type: "checkin", ...payload });
 
   // Format WhatsApp message
   const dateStr = now.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric' });
