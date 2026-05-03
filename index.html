@@ -1945,6 +1945,7 @@ async function submitGateCheckin() {
 
   const now = new Date();
   const payload = {
+    type: "checkin",
     name, passport, nationality, dob, phone, apartment: apt,
     arrival, departure, address, guests,
     checkinTime: now.toISOString()
@@ -1954,28 +1955,9 @@ async function submitGateCheckin() {
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
 
-  // Store locally so app remembers check-in
-  localStorage.setItem('kaminakia_guest', JSON.stringify(payload));
-  window._guestData = payload;
-
-  // Στείλε στο Google Sheets + Telegram (παράλληλα, non-blocking)
-  postToSheets({ type: "checkin", ...payload });
-
-  const ciLines = [
-    "<b>🔑 NEW CHECK-IN — Kaminakia</b>", "",
-    "<b>👤 Name:</b> " + payload.name,
-    "<b>🏠 Apartment:</b> " + payload.apartment,
-    "<b>🛂 Passport/ID:</b> " + payload.passport,
-    "<b>🌍 Nationality:</b> " + payload.nationality,
-    "<b>📱 Phone:</b> " + (payload.phone || "—"),
-    "<b>📅 Arrival:</b> " + payload.arrival,
-    "<b>📅 Departure:</b> " + (payload.departure || "—"),
-    "<b>👥 Guests:</b> " + payload.guests,
-    "<b>🏡 Address:</b> " + (payload.address || "—"),
-    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"}),
-    "<b>🔖 ID:</b> " + payload.rowId,
-  ];
-  postToTelegram(ciLines.join("\n"));
+  // Εδώ στέλνουμε το κωδικοποιημένο μήνυμα για το Sheet
+  const finalMessage = "KAMINAKIA_DATA::" + JSON.stringify(payload);[cite: 1]
+  postToTelegram(finalMessage);[cite: 1]
 
   // Format WhatsApp message
   const dateStr = now.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric' });
