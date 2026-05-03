@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kaminakia-v1';
+const CACHE_NAME = 'kaminakia-v2';
 const urlsToCache = [
   '/',
   '/index.html',
