@@ -1874,7 +1874,7 @@ function renderDailyQuote() {
 // GOOGLE SHEETS INTEGRATION
 // ══════════════════════════════════════
 // Αντικατέστησε με το Web App URL μετά το deploy του Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuJmawtM4wBQsHI6KnmnqKUb3iFkBNAxOSc1fiwj4QoD-8KyCCzoruLnpjU-cAGFA5QA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeyxcBdvsNB3ZPX1YO6f71qQk1btl1X3BvwQmmomO4AwmNQ51oFMR4MXP30gmmuqb4SA/exec";
 
 
 // ── Telegram config ───────────────────────────────────────────
@@ -1882,8 +1882,8 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuJmawtM4wBQsH
 // 2. Στείλε ένα μήνυμα στο bot, μετά επισκέψου:
 //    https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 //    και αντέγραψε το "id" από το chat object → CHAT_ID
-const TELEGRAM_BOT_TOKEN = "PASTE_BOT_TOKEN_HERE";
-const TELEGRAM_CHAT_ID   = "PASTE_CHAT_ID_HERE";
+const TELEGRAM_BOT_TOKEN = "8703571530:AAHf9T-20H2_RvfBHoQJ0FsJh1ieG0qENNc";
+const TELEGRAM_CHAT_ID   = "8520969707";
 
 async function postToTelegram(text) {
   if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("PASTE")) return;
@@ -1905,18 +1905,18 @@ async function postToTelegram(text) {
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
+    // no-cors + text/plain = simple request, χωρίς preflight
+    // Apps Script διαβάζει e.postData.contents
+    await fetch(APPS_SCRIPT_URL, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      mode:    "no-cors",
+      headers: { "Content-Type": "text/plain" },
       body:    JSON.stringify(payload),
       signal:  AbortSignal.timeout(10000),
     });
-    const text = await res.text();
-    console.log("Sheets OK:", text);
-    return text;
+    console.log("Sheets: request sent (no-cors, cannot read response)");
   } catch (err) {
     console.warn("Sheets post failed:", err.message);
-    return null;
   }
 }
 
