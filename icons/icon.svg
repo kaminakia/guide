@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a1a14"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#c9a96e" stroke-width="2" opacity="0.4"/>
+  <text x="256" y="320" font-family="serif" font-size="220" fill="#c9a96e" text-anchor="middle" font-style="italic">K</text>
+  <text x="256" y="460" font-family="sans-serif" font-size="38" fill="#c9a96e" text-anchor="middle" letter-spacing="12" opacity="0.8">AMINAKIA</text>
+</svg>
