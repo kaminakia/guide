@@ -1899,10 +1899,10 @@ async function postToTelegram(text) {
         signal: AbortSignal.timeout(8000),
       }
     );
-  } catch (err) {
+ } catch (err) {
     console.warn("Telegram post failed:", err);
   }
-} // <--- ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΚΛΕΙΝΕΙ Η postToTelegram
+}
 
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
