@@ -1955,37 +1955,43 @@ async function submitGateCheckin() {
   };
 
   // Δημιούργησε rowId για να βρούμε τη γραμμή στο check-out
+  const btn = document.getElementById('gateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Sending…';
+
+  const now = new Date();
+  const payload = {
+    type: "checkin",
+    name, passport, nationality, dob, phone, apartment: apt,
+    arrival, departure, address, guests,
+    checkinTime: now.toISOString()
+  };
+
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
-localStorage.setItem('kaminakia_guest', JSON.stringify(payload));
-  window._guestData = payload;
-  // Εδώ στέλνουμε το κωδικοποιημένο μήνυμα για το Sheet
-  const finalMessage = "KAMINAKIA_DATA::" + JSON.stringify(payload);
-  // Notification στο προσωπικό chat
-  postToTelegram(finalMessage);
-  // Δεδομένα στο group για Apps Script polling
-  fetch(
-    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_DATA_CHAT_ID,
-        text: finalMessage,
-        disable_notification: true,
-      }),
-    }
-  ).catch(() => {});
 
-  // Format WhatsApp message
-  const dateStr = now.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric' });
-  const timeStr = now.toLocaleTimeString('el-GR', { hour:'2-digit', minute:'2-digit' });
-  const msg = encodeURIComponent(
-    `Hi, I am ${name}, staying at ${apt}. I've just checked in.`
-  );
+  // Ενεργοποίηση μνήμης (localStorage)
+  localStorage.setItem('kaminakia_guest', JSON.stringify(payload));
+  window._guestData = payload;
+
+  // Αποστολή στο Google Sheets (Image Pink μέθοδος)
+  await postToSheets(payload);
+
+  // Αποστολή στο Telegram (Ευανάγνωστο μήνυμα)
+  const ciLines = [
+    "<b>🔑 NEW CHECK-IN — Kaminakia</b>", "",
+    "<b>👤 Name:</b> " + payload.name,
+    "<b>🏠 Apartment:</b> " + payload.apartment,
+    "<b>📅 Arrival:</b> " + payload.arrival,
+    "<b>👥 Guests:</b> " + payload.guests,
+    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"}),
+  ];
+  postToTelegram(ciLines.join("\n"));
+
+  // Άνοιγμα WhatsApp
+  const msg = encodeURIComponent(`Hi, I am ${name}, staying at ${apt}. I've just checked in.`);
   window.open(`https://wa.me/306959800433?text=${msg}`, '_blank');
 
-  // Launch the app
   launchApp();
 }
 
