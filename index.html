@@ -1886,25 +1886,23 @@ const TELEGRAM_BOT_TOKEN = "8703571530:AAHf9T-20H2_RvfBHoQJ0FsJh1ieG0qENNc";
 const TELEGRAM_CHAT_ID      = "8520969707";   // notifications → προσωπικό chat
 const TELEGRAM_DATA_CHAT_ID = "-1003967717088";  // KAMINAKIA_DATA:: → supergroup (διαβάζει το Apps Script)
 
-function postToTelegram(text, chatId = TELEGRAM_CHAT_ID) {
-
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-  const payload = {
-    chat_id: chatId,
-    text: text,
-    parse_mode: "HTML"
-  };
-
-  const options = {
-    method: "post",
-    contentType: "application/json",
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
-
-  UrlFetchApp.fetch(url, options);
+async function postToTelegram(text) {
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("PASTE")) return;
+  try {
+    await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML" }),
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+  } catch (err) {
+    console.warn("Telegram post failed (non-critical):", err);
+  }
 }
+
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
   try {
