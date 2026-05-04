@@ -1874,7 +1874,7 @@ function renderDailyQuote() {
 // GOOGLE SHEETS INTEGRATION
 // ══════════════════════════════════════
 // Αντικατέστησε με το Web App URL μετά το deploy του Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOvuOC53ZzJdZnzyFhJNtJHiHpWVmiTDUjQ5wI5QVImJsAdHNW_3-XWd5EvYFdSgRRyw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytbLYGQ4EKJUiRxt-10DfCNKf8gBivTbCMpLMiZfU_GLod1yCakWwKqdYKxh22CRCbiA/exec";
 
 
 // ── Telegram config ───────────────────────────────────────────
@@ -1968,7 +1968,7 @@ async function submitGateCheckin() {
     "<b>👥 Guests:</b> " + guests,
     "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"})
   ];
-  await postToTelegram(ciLines.join("\n"));
+
 
   // 3. Άνοιγμα WhatsApp
   const msg = encodeURIComponent(`Hi, I am ${name}, staying at ${apt}. I've just checked in.`);
@@ -2025,7 +2025,7 @@ async function submitCheckout() {
     "<b>📅 Stay:</b> " + g.arrival + " έως " + g.departure,
     "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"})
   ];
-  await postToTelegram(coLines.join("\n"));
+
 
   // 3. WhatsApp & Καθαρισμός
   const msg = encodeURIComponent(`Hi, I am ${g.name}, from ${g.apartment}. I've just checked out.`);
