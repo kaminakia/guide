@@ -673,7 +673,8 @@ input[type="date"].fi{min-height:48px;line-height:normal}
 }
 #checkinGate .ci-hero-title{font-size:28px}
 
-</style>ogle Translate -->
+</style>
+<!-- Google Translate -->
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
@@ -1954,19 +1955,6 @@ async function submitGateCheckin() {
     checkinTime: now.toISOString()
   };
 
-  // Δημιούργησε rowId για να βρούμε τη γραμμή στο check-out
-  const btn = document.getElementById('gateBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span> Sending…';
-
-  const now = new Date();
-  const payload = {
-    type: "checkin",
-    name, passport, nationality, dob, phone, apartment: apt,
-    arrival, departure, address, guests,
-    checkinTime: now.toISOString()
-  };
-
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
 
@@ -1975,9 +1963,9 @@ async function submitGateCheckin() {
   window._guestData = payload;
 
   // Αποστολή στο Google Sheets (Image Pink μέθοδος)
-  await postToSheets(payload);
+  postToSheets(payload); 
 
-  // Αποστολή στο Telegram (Ευανάγνωστο μήνυμα)
+  // Αποστολή στο Telegram
   const ciLines = [
     "<b>🔑 NEW CHECK-IN — Kaminakia</b>", "",
     "<b>👤 Name:</b> " + payload.name,
@@ -1988,7 +1976,7 @@ async function submitGateCheckin() {
   ];
   postToTelegram(ciLines.join("\n"));
 
-  // Άνοιγμα WhatsApp
+  // WhatsApp
   const msg = encodeURIComponent(`Hi, I am ${name}, staying at ${apt}. I've just checked in.`);
   window.open(`https://wa.me/306959800433?text=${msg}`, '_blank');
 
