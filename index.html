@@ -673,8 +673,7 @@ input[type="date"].fi{min-height:48px;line-height:normal}
 }
 #checkinGate .ci-hero-title{font-size:28px}
 
-</style>
-<!-- Google Translate -->
+</style>ogle Translate -->
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
@@ -1875,7 +1874,7 @@ function renderDailyQuote() {
 // GOOGLE SHEETS INTEGRATION
 // ══════════════════════════════════════
 // Αντικατέστησε με το Web App URL μετά το deploy του Apps Script
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOvuOC53ZzJdZnzyFhJNtJHiHpWVmiTDUjQ5wI5QVImJsAdHNW_3-XWd5EvYFdSgRRyw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzM1P6O9_qNyNsgyWuchX_8CCj9RATyp37HkH7hxw30mYrNxegLzIb-fISm4RGxZSV_HA/exec";
 
 
 // ── Telegram config ───────────────────────────────────────────
@@ -1884,7 +1883,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOvuOC53ZzJdZn
 //    https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 //    και αντέγραψε το "id" από το chat object → CHAT_ID
 const TELEGRAM_BOT_TOKEN = "8703571530:AAHf9T-20H2_RvfBHoQJ0FsJh1ieG0qENNc";
-const TELEGRAM_CHAT_ID      = "-8520969707";   // notifications → προσωπικό chat
+const TELEGRAM_CHAT_ID      = "8520969707";   // notifications → προσωπικό chat
 const TELEGRAM_DATA_CHAT_ID = "-1003967717088";  // KAMINAKIA_DATA:: → supergroup (διαβάζει το Apps Script)
 
 async function postToTelegram(text) {
@@ -1899,30 +1898,27 @@ async function postToTelegram(text) {
         signal: AbortSignal.timeout(8000),
       }
     );
- } catch (err) {
-    console.warn("Telegram post failed:", err);
+  } catch (err) {
+    console.warn("Telegram post failed (non-critical):", err);
   }
 }
 
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
-  return new Promise((resolve) => {
-    try {
-      const json    = JSON.stringify(payload);
-      const encoded = btoa(unescape(encodeURIComponent(json)));
-      const url     = APPS_SCRIPT_URL + "?d=" + encodeURIComponent(encoded);
-      const img     = new Image();
-      img.onload  = () => resolve("ok");
-      img.onerror = () => resolve("sent"); 
-      img.src = url;
-    } catch (err) {
-      console.warn("Sheets post failed:", err);
-      resolve("error");
-    }
-  });
+  try {
+    // Χρησιμοποιούμε mode: 'no-cors' γιατί το Apps Script Web App 
+    // δεν επιστρέφει headers για CORS, αλλά το POST φτάνει κανονικά.
+    await fetch(APPS_SCRIPT_URL, {
+      method:  "POST",
+      mode:    "no-cors", 
+      headers: { "Content-Type": "text/plain" }, // text/plain για να αποφύγουμε το preflight
+      body:    JSON.stringify(payload)
+    });
+    console.log("Data sent to Sheets:", payload.type);
+  } catch (err) {
+    console.warn("Sheets post failed:", err);
+  }
 }
-
-// CHECK-IN GATE
 
 // CHECK-IN GATE
 // ══════════════════════════════════════
@@ -1932,8 +1928,8 @@ async function submitGateCheckin() {
   const nationality= document.getElementById('gi_nationality').value.trim();
   const phone      = document.getElementById('gi_phone').value.trim();
   const apt        = document.getElementById('gi_apt').value;
-  const arrival    = arrivalValue();
-  const departure  = departureValue();
+  const arrival    = arrivalValue(); // yyyy-mm-dd
+  const departure  = departureValue(); // yyyy-mm-dd
   const dob        = dobValue();
   const address    = document.getElementById('gi_address').value.trim();
   const guests     = document.getElementById('gi_guests').value;
@@ -1947,36 +1943,34 @@ async function submitGateCheckin() {
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> Sending…';
 
-  const now = new Date();
   const payload = {
     type: "checkin",
-    name, passport, nationality, dob, phone, apartment: apt,
-    arrival, departure, address, guests,
-    checkinTime: now.toISOString()
+    name, passport, nationality, dob, phone, 
+    apartment: apt, arrival, departure, address, guests
   };
 
-  const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
-  payload.rowId = rowId;
-
-  // Ενεργοποίηση μνήμης (localStorage)
+  // Αποθήκευση τοπικά για το check-out
   localStorage.setItem('kaminakia_guest', JSON.stringify(payload));
   window._guestData = payload;
 
-  // Αποστολή στο Google Sheets (Image Pink μέθοδος)
-  postToSheets(payload); 
+  // 1. Εγγραφή στα Google Sheets
+  await postToSheets(payload);
 
-  // Αποστολή στο Telegram
+  // 2. Ευανάγνωστο μήνυμα Telegram
   const ciLines = [
     "<b>🔑 NEW CHECK-IN — Kaminakia</b>", "",
-    "<b>👤 Name:</b> " + payload.name,
-    "<b>🏠 Apartment:</b> " + payload.apartment,
-    "<b>📅 Arrival:</b> " + payload.arrival,
-    "<b>👥 Guests:</b> " + payload.guests,
-    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"}),
+    "<b>👤 Name:</b> " + name,
+    "<b>🏠 Apartment:</b> " + apt,
+    "<b>🛂 ID:</b> " + passport,
+    "<b>🌍 Nationality:</b> " + nationality,
+    "<b>📅 Arrival:</b> " + arrival,
+    "<b>📅 Departure:</b> " + (departure || "—"),
+    "<b>👥 Guests:</b> " + guests,
+    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"})
   ];
-  postToTelegram(ciLines.join("\n"));
+  await postToTelegram(ciLines.join("\n"));
 
-  // WhatsApp
+  // 3. Άνοιγμα WhatsApp
   const msg = encodeURIComponent(`Hi, I am ${name}, staying at ${apt}. I've just checked in.`);
   window.open(`https://wa.me/306959800433?text=${msg}`, '_blank');
 
@@ -2004,73 +1998,44 @@ function initCheckoutScreen() {
 
 async function submitCheckout() {
   const g = window._guestData;
-  if (!g) { alert(t('co_no_data') || 'No check-in data found.'); return; }
+  if (!g) { alert('No check-in data found.'); return; }
 
   const btn = document.getElementById('coBtn');
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> Sending…';
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('el-GR', { day:'2-digit', month:'2-digit', year:'numeric' });
-  const timeStr = now.toLocaleTimeString('el-GR', { hour:'2-digit', minute:'2-digit' });
-
-  // Στείλε στο Google Sheets + push notification (παράλληλα, non-blocking)
-  postToSheets({
-    type:      "checkout",
-    name:      g.name,
+  const payload = {
+    type: "checkout",
+    name: g.name,
     apartment: g.apartment,
-    arrival:   formatDateEU(g.arrival),
-    departure: formatDateEU(g.departure),
-    guests:    g.guests,
-    rowId:     g.rowId || "",
-    checkoutTime: now.toISOString(),
-  });
+    arrival: g.arrival,
+    departure: g.departure,
+    guests: g.guests,
+    phone: g.phone || ""
+  };
 
+  // 1. Εγγραφή στο Sheet (θα μπει νέα γραμμή στο Housekeeping)
+  await postToSheets(payload);
+
+  // 2. Μήνυμα Telegram
   const coLines = [
     "<b>🚪 CHECK-OUT — Kaminakia</b>", "",
     "<b>👤 Name:</b> " + g.name,
     "<b>🏠 Apartment:</b> " + g.apartment,
-    "<b>📅 Arrival:</b> " + formatDateEU(g.arrival),
-    "<b>📅 Departure:</b> " + formatDateEU(g.departure),
-    "<b>👥 Guests:</b> " + g.guests,
-    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"}),
-    "<b>🔖 ID:</b> " + (g.rowId || "—"),
+    "<b>📅 Stay:</b> " + g.arrival + " έως " + g.departure,
+    "<b>🕐 Time:</b> " + new Date().toLocaleString("el-GR", {timeZone:"Europe/Athens"})
   ];
-  postToTelegram(coLines.join("\n"));
+  await postToTelegram(coLines.join("\n"));
 
-  const msg = encodeURIComponent(
-    `Hi, I am ${g.name}, from ${g.apartment}. I've just checked out.`
-  );
+  // 3. WhatsApp & Καθαρισμός
+  const msg = encodeURIComponent(`Hi, I am ${g.name}, from ${g.apartment}. I've just checked out.`);
   window.open(`https://wa.me/306959800433?text=${msg}`, '_blank');
 
-  // Clear stored guest data
   localStorage.removeItem('kaminakia_guest');
   window._guestData = null;
-
   document.getElementById('coFormWrap').style.display = 'none';
   document.getElementById('coSuccess').classList.add('show');
   window.scrollTo(0,0);
-}
-
-// (checkout init is called directly in goToTab via the screen activation)
-
-// Legacy resetCheckin (kept for safety)
-function resetCheckin() { goToTab('home'); }
-
-async function tryBgSync(payload) {
-  try {
-    const db = await new Promise((res,rej) => {
-      const r = indexedDB.open('kaminakia',1);
-      r.onupgradeneeded = e => e.target.result.createObjectStore('pending',{keyPath:'id',autoIncrement:true});
-      r.onsuccess = e => res(e.target.result);
-      r.onerror = rej;
-    });
-    db.transaction('pending','readwrite').objectStore('pending').add(payload);
-    if('serviceWorker' in navigator && 'SyncManager' in window){
-      const sw = await navigator.serviceWorker.ready;
-      await sw.sync.register('checkin-sync');
-    }
-  } catch {}
 }
 
 // ══════════════════════════════════════
