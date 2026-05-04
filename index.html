@@ -1883,7 +1883,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOvuOC53ZzJdZn
 //    https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
 //    και αντέγραψε το "id" από το chat object → CHAT_ID
 const TELEGRAM_BOT_TOKEN = "8703571530:AAHf9T-20H2_RvfBHoQJ0FsJh1ieG0qENNc";
-const TELEGRAM_CHAT_ID      = "8520969707";   // notifications → προσωπικό chat
+const TELEGRAM_CHAT_ID      = "-8520969707";   // notifications → προσωπικό chat
 const TELEGRAM_DATA_CHAT_ID = "-1003967717088";  // KAMINAKIA_DATA:: → supergroup (διαβάζει το Apps Script)
 
 async function postToTelegram(text) {
@@ -1955,7 +1955,8 @@ async function submitGateCheckin() {
   // Δημιούργησε rowId για να βρούμε τη γραμμή στο check-out
   const rowId = "KM" + Date.now() + "-" + Math.floor(Math.random() * 9000 + 1000);
   payload.rowId = rowId;
-
+localStorage.setItem('kaminakia_guest', JSON.stringify(payload));
+  window._guestData = payload;
   // Εδώ στέλνουμε το κωδικοποιημένο μήνυμα για το Sheet
   const finalMessage = "KAMINAKIA_DATA::" + JSON.stringify(payload);
   // Notification στο προσωπικό chat
