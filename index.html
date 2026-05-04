@@ -1899,27 +1899,29 @@ async function postToTelegram(text) {
       }
     );
   } catch (err) {
-    console.warn("Telegram post failed (non-critical):", err);
+    console.warn("Telegram post failed:", err);
   }
-}
+} // <--- ΕΔΩ ΠΡΕΠΕΙ ΝΑ ΚΛΕΙΝΕΙ Η postToTelegram
 
 async function postToSheets(payload) {
   if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("PASTE")) return null;
-  try {
-    // no-cors + text/plain = simple request, χωρίς preflight
-    // Apps Script διαβάζει e.postData.contents
-    await fetch(APPS_SCRIPT_URL, {
-      method:  "POST",
-      mode:    "no-cors",
-      headers: { "Content-Type": "text/plain" },
-      body:    JSON.stringify(payload),
-      signal:  AbortSignal.timeout(10000),
-    });
-    console.log("Sheets: request sent (no-cors, cannot read response)");
-  } catch (err) {
-    console.warn("Sheets post failed:", err.message);
-  }
+  return new Promise((resolve) => {
+    try {
+      const json    = JSON.stringify(payload);
+      const encoded = btoa(unescape(encodeURIComponent(json)));
+      const url     = APPS_SCRIPT_URL + "?d=" + encodeURIComponent(encoded);
+      const img     = new Image();
+      img.onload  = () => resolve("ok");
+      img.onerror = () => resolve("sent"); 
+      img.src = url;
+    } catch (err) {
+      console.warn("Sheets post failed:", err);
+      resolve("error");
+    }
+  });
 }
+
+// CHECK-IN GATE
 
 // CHECK-IN GATE
 // ══════════════════════════════════════
